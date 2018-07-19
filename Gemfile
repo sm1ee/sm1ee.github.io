@@ -3,4 +3,4 @@ source "https://rubygems.org"
 gem "jekyll", "~> 3.6.2"
 gem "github-pages", "~> 168"
 gem "rake", "~> 12.3.0"
-gem 'html-proofer'
+gem 'html-proofer', "-> 3.9.1"
