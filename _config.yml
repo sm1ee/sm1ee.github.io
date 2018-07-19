@@ -60,7 +60,7 @@ exclude:
   - Gemfile.lock
   - changelog.md
   - "*.Rmd"
-  - vendor
+    #  - vendor
   - .tra        vis.yml
   - node_modules
   - .git
