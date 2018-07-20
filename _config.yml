@@ -7,15 +7,15 @@ paginate: 5
 language: 'en-uk'
 
 # Website info
-name: 'Finding The Way Home'
-description: "A beautiful narrative written with the world's most elegant publishing platform. The story begins here."
+name: 'smlee'
+description: "Computer Security, Programming, Life..."
 
 short_url: 'sm1ee.github.io/'
 google_analytics: UA-69281367-1
 disqus: username
 # edit baseurl to simply '/' if using as your personal page (instead of a project page)
 baseurl: ''
-url: https://sm1ee.githb.io/
+url: https://sm1ee.github.io/
 # Permalinks
 permalink: /:title
 # permalink: /author/:username
