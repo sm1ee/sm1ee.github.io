@@ -38,3 +38,11 @@ martin:
   url: jekyller.github.io/jasper
   bio: An American pastor, activist, humanitarian. People know me for leading the African-American Civil Rights movement using nonviolent civil disobedience.
   assets: assets/images/martin.jpg
+smlee:
+  username: smlee
+  name: Seung Myung Lee
+  location: Repubilc of Korea
+  ur_full: https://sm1ee.github.io/
+  url: sm1ee.github.io/
+  bio:
+  assets: assets/images/gt.jpg
