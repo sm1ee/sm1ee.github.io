@@ -15,7 +15,7 @@ google_analytics: UA-69281367-1
 disqus: username
 # edit baseurl to simply '/' if using as your personal page (instead of a project page)
 baseurl: ''
-
+url: https://sm1ee.githb.io/
 # Permalinks
 permalink: /:title
 # permalink: /author/:username
