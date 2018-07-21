@@ -12,7 +12,7 @@ description: "Computer Security, Programming, Life..."
 
 short_url: 'sm1ee.github.io/'
 google_analytics: UA-69281367-1
-disqus: username
+disqus: sm1ee
 # edit baseurl to simply '/' if using as your personal page (instead of a project page)
 baseurl: ''
 url: https://sm1ee.github.io/
