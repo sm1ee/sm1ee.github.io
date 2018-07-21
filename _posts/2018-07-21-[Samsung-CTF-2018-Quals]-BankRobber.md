@@ -1,52 +1,67 @@
 ---
 layout: post
 disqus: true
-cover: 'assets/images/cover6.jpg'
+cover: 'assets/images/sctf2018/sctf2018.png'
 navigation: True
-title: sctf2018(samsung) write-ups
-date: 2018-07-19 10:18:00
-tags: CTFs sctf2018
+title: '[Samsung CTF 2018 Quals] - BankRobber'
+tags: ctfs sctf2018
 subclass: 'post tag-fiction'
 logo: 'assets/images/smlee.png'
 author: smlee
 categories: smlee
 ---
 
+<img src="/assets/images/sctf2018/bankrobber/1.png" width="100%"/>
 
+스마트 컨트랙트관련 문제인데 처음 접해봐서 좀 헤맸는데 풀고나니 엄청 쉬운 문제였다.  
+문제 자체는 **solidity**에서 일어날 수 있는 몇 가지 issue에 관해서 시큐어 코딩을하면 된다.  
+처음에는 **solidity**에서 일어났던 보안 issue 들을 찾고 패치하는 식으로 진행하였는데,  
+hitcon 2018에서 취약점 점검 도구인 [MyThril](https://github.com/ConsenSys/mythril)를 공개하여 이를 사용하여 진행하였다.  
 
-
-# dingJMax
-
-```c
-#define _GNU_SOURCE
-#include <ncurses.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <dlfcn.h>
-#include <stdio.h>
-
-typedef int (*origin_wgetch)(WINDOW*);
-
-int count = 0;
-
-int wgetch(WINDOW *win){
-	char *line = 0x0000000000607648;
-	char key[] = {'d','f','j','k'};
-
-	for(int i = 0; i < 4; i++){
-		if(line[i] == 'o' && ++count >= 20){
-				count = 0;
-				return key[i];
-		}
-	}
-
-	origin_wgetch _wgetch = (origin_wgetch)dlsym(RTLD_NEXT, "wgetch");
-	return _wgetch(win);
-}
+사용법은 다음과 같다.  
 
 ```
+$ docker pull mythril/myth
+```
 
-# BankRobber
+```
+$ sudo docker run -v SCTFBank.sol:/SCTFBank.sol mythril/myth -x /SCTFBank.sol
+```
+
+실행하면 다음과 같이 reporting을 해준다.  
+<img src="/assets/images/sctf2018/bankrobber/2.png" width="100%"/>
+
+issue를 모두 패치 한 후 서버에 전달하면 flag를 획득할 수 있다.  
+
+## Solve code:
+
+```python
+#!/usr/bin/env python
+from pwn import *
+import json
+
+addr = "bankrobber.eatpwnnosleep.com"
+port = 4567
+s = remote(addr, port)
+
+def auth():
+    s.recvuntil("API key required : ")
+    s.sendline("349b7ec9c6b3caa710b03589aede7a9bcf2c1466307e7f6a3ce3ef1b8c30aa0e")
+    s.recv(4096)
+
+def solver():
+    f = open("SCTFBank.sol", "r")
+    s.send(f.read())
+    f.close()
+
+auth()
+solver()
+
+s.interactive()
+s.close()
+```
+
+## SCTFBank.sol
 
 ```javascript
 pragma solidity ^0.4.18;
@@ -112,42 +127,6 @@ contract SCTFBank{
     }
 }
 //END
+
 ```
-
-# HideInSSL
-
-[sslpacket.pcap](https://github.com/sm1ee/ctf/blob/master/sctf2018/HideInSSL/sslpacket.pcap)
-```python
-#!/usr/bin/env python
-from pwn import *
-from scapy.all import *
-
-def requset(_packet):
-    return _packet[TCP].payload.getlayer(Raw).load[0x13:0x2B]
-
-def response(_packet):
-    return int(_packet[TCP].payload.getlayer(Raw).load[0]);
-
-jpg_gadget = ""
-packets = rdpcap('./sslpacket.pcap') 
-
-log.info("Start")
-for i, packet in enumerate(packets):
-    packet_len = len(packet)
-
-    if packet_len == 74 and packet[TCP].flags == 0x02:
-        f = open("flag_%s.jpg" % i, "wb")
-    elif packet_len >= 246 and packet_len <= 250:
-        jpg_gadget = requset(packet)
-    elif packet_len == 67:
-        if response(packet) == True:
-            f.write(jpg_gadget)
-    elif packet_len == 270:
-        log.info("Wrote it in file.")
-        EOF = True
-        f.close()
-log.info("Done !")
-f.close()
-```
-
 
