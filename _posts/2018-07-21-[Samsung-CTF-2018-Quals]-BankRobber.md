@@ -5,7 +5,7 @@ cover: 'assets/images/sctf2018/sctf2018.png'
 navigation: True
 title: '[Samsung CTF 2018 Quals] - BankRobber'
 tags: ctfs sctf2018
-subclass: 'post tag-fiction'
+subclass: 'post tag-ctfs'
 logo: 'assets/images/smlee.png'
 author: smlee
 categories: smlee

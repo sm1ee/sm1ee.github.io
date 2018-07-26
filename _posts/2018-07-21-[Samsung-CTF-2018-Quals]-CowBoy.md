@@ -6,7 +6,7 @@ navigation: True
 title: '[Samsung CTF 2018 Quals] - CowBoy'
 date: 2018-07-19 10:18:00
 tags: ctfs sctf2018
-subclass: 'post tag-fiction'
+subclass: 'post tag-ctfs'
 logo: 'assets/images/smlee.png'
 author: smlee
 categories: smlee
