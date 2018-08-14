@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Document Settings -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- Page Meta -->
+    <title>[Samsung CTF 2018 Quals] - dingJMax</title>
+    <meta name="description" content="Computer Security, Programming, Life..." />
+
+    <!-- Mobile Meta -->
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Brand icon -->
+    <link rel="shortcut icon" href="/assets/images/favicon.ico" >
+
+    <!-- Styles'n'Scripts -->
+    <link rel="stylesheet" type="text/css" href="/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <link rel="stylesheet" type="text/css" href="/assets/css/syntax.css" />
+
+    <!-- highlight.js -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/styles/railscasts.min.css">
+    <!-- <style>.hljs { background: none; }</style> -->
+
+    <!-- Ghost outputs important style and meta data with this tag -->
+        <link rel="canonical" href="https://sm1ee.github.io///Samsung-CTF-2018-Quals-dingJMax" />
+    <meta name="referrer" content="origin" />
+    <link rel="next" href="/page2/" />
+
+    <meta property="og:site_name" content="smlee" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="[Samsung CTF 2018 Quals] - dingJMax" />
+    <meta property="og:description" content="Computer Security, Programming, Life..." />
+    <meta property="og:url" content="https://sm1ee.github.io///Samsung-CTF-2018-Quals-dingJMax" />
+    <meta property="og:image" content="/assets/images/sctf2018/sctf2018.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="[Samsung CTF 2018 Quals] - dingJMax" />
+    <meta name="twitter:description" content="Computer Security, Programming, Life..." />
+    <meta name="twitter:url" content="https://sm1ee.github.io///Samsung-CTF-2018-Quals-dingJMax" />
+    <meta name="twitter:image:src" content="/assets/images/sctf2018/sctf2018.png" />
+
+    <script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Website",
+    "publisher": "smlee",
+    "name": "[Samsung CTF 2018 Quals] - dingJMax",
+    "url": "https://sm1ee.github.io///Samsung-CTF-2018-Quals-dingJMax",
+    "image": "/assets/images/sctf2018/sctf2018.png",
+    "description": "Computer Security, Programming, Life..."
+}
+    </script>
+
+    <meta name="generator" content="Jekyll 3.0.0" />
+    <link rel="alternate" type="application/rss+xml" title="smlee" href="/feed.xml" />
+
+
+</head>
+<body class="home-template nav-closed">
+
+    <!-- The blog navigation links -->
+    <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        <li class="nav-home " role="presentation"><a href="/">Home</a></li>
+        <li class="nav-about " role="presentation"><a href="/about">About</a></li>
+
+        <li class="nav-ctfs " role="presentation"><a href="/tag/ctfs">CTFs</a></li>
+        <li class="nav-system_hacking " role="presentation"><a href="/tag/system_hacking">system hacking</a></li>
+        <li class="nav-reversing " role="presentation"><a href="/tag/reversing">Reversing</a></li>
+
+
+        <!-- <li class="nav-author " role="presentation"><a href="/author/smlee">smlee</a></li> -->
+    </ul>
+    <a class="subscribe-button icon-feed" href="/feed.xml">Subscribe</a>
+</div>
+<span class="nav-cover"></span>
+
+
+    <div class="site-wrapper">
+
+        <!-- All the main content gets inserted here, index.hbs, post.hbs, etc -->
+        <!-- default -->
+
+<!-- The comment above "< default" means - insert everything in this file into -->
+    <!-- the [body] of the default.hbs template, which contains our header/footer. -->
+
+<!-- Everything inside the #post tags pulls data from the post -->
+<!-- #post -->
+
+<header class="main-header post-head " style="background-image: url(/assets/images/sctf2018/sctf2018.png) ">
+    <nav class="main-nav  overlay  clearfix">
+        <a class="blog-logo" href="/"><img src="/assets/images/smlee.png" alt="Blog Logo" /></a>
+        
+            <a class="menu-button icon-menu" href="#"><span class="word">Menu</span></a>
+        
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post tag-ctfs">
+
+        <header class="post-header">
+            <h1 class="post-title">[Samsung CTF 2018 Quals] - dingJMax</h1>
+            <section class="post-meta">
+            <!-- <a href='/'></a> -->
+
+            
+                
+                    <a href='/author/smlee'>smlee</a>
+                
+            
+            <time class="post-date" datetime="2018-07-21">21 Jul 2018</time>
+                <!-- [[tags prefix=" on "]] -->
+                
+                on
+                
+                    
+                       <a href='/tag/ctfs'>Ctfs</a>,
+                    
+                
+                    
+                       <a href='/tag/sctf2018'>Sctf2018</a>
+                    
+                
+                
+            </section>
+        </header>
+
+        <section class="post-content">
+            <hr style="margin-top:3%;"/>
+            <p><a href="https://github.com/sm1ee/ctf/blob/master/sctf2018/dingJMax/dingJMax_e524bb0f4410c9be57cf1c387ab79872dcbbf592">dingJMax</a>
+<img src="/assets/images/sctf2018/dingJMax/1.png" width="100%" /></p>
+
+<p>이 문제는 분석을 대충해서 푸는데 꽤 시간이 걸렸다..</p>
+
+<p>실행시키면 다음과 같이 게임이 실행되는데 입력 마다 flag값이 바뀌고 판정에 의해 점수를 받는다. <br />
+<img src="/assets/images/sctf2018/dingJMax/2.png" width="100%" /></p>
+
+<p>문제에서 제시한 조건을 만족하고 flag를 횓득하려면 ALL Pertect가 나와야 한다. <del>사실상 손으로는 불가 능하다.</del></p>
+
+<p>바이너리를 보면 Note의 속도나 순서가 고정되어 있고 판정이나 점수가 flag에 직접적인 영향을 주진 않는다.<br />
+<img src="/assets/images/sctf2018/dingJMax/4.png" width="100%" /></p>
+
+<p>그렇다면 입력 값에 의해 flag가 변경되고 Note가 고정이기 때문에 Note의 순서만 정확하게 입력된다면 flag 획득할 수 있다. <del>그런 줄 알았다</del></p>
+
+<p>Note를 parsing 하여 d,f,j,k 값으로 바꿔서 <strong>pwntools</strong>로 입력을 줬지만 역시 flag는 획득하지 못했다.<br />
+바이너리를 다시보니 flag 값을 변경할 때 i 값에 영향을 받고 있었고 i 값이 20배 수 일 때 노트 위치가 이동된다.<br />
+<img src="/assets/images/sctf2018/dingJMax/3.png" width="100%" /></p>
+
+<p>Perfect 판정의 경우 0x60764C 주소를 기준으로 다음과 같이 각각 1byte씩 판정 라인을 두고 있다.</p>
+<blockquote>
+  <p>d : 0x60764C<br />
+f : 0x60764D<br />
+j : 0x60764E<br />
+k : 0x60764F</p>
+</blockquote>
+
+<p>만약 j를 입력했다면 0x60764E 주소에 ‘o’ 값이 존재하는지 확인하고 i 값이 20의 배수일 때 Perfect 판정이 된다.<br />
+<img src="/assets/images/sctf2018/dingJMax/5.png" width="100%" /></p>
+
+<p>결국 꼼수는 없고 DBI나 binary patch 등 여러 방법이 있을 것 같은데, 나 같은 경우 <strong>wgetch</strong> 함수를 hooking하여 해결했다.</p>
+
+<p><strong>wgetch</strong> 함수를 후킹한 이유는 다음과 같다.</p>
+<ul>
+  <li>후킹된 함수에서 input을 control 할 수 있어야 한다.</li>
+  <li>판정라인 이 후 사용되는 함수 hooking 시 이미 늦다.</li>
+  <li>위 조건들을 만족하며 가장 간단하게 hooking 할 수 있다.</li>
+</ul>
+
+<h2 id="solve-code">Solve code:</h2>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define _GNU_SOURCE
+#include &lt;ncurses.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;dlfcn.h&gt;
+#include &lt;stdio.h&gt;
+</span>
+
+<span class="k">typedef</span> <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">origin_wgetch</span><span class="p">)(</span><span class="n">WINDOW</span><span class="o">*</span><span class="p">);</span>
+
+<span class="kt">int</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="n">wgetch</span><span class="p">(</span><span class="n">WINDOW</span> <span class="o">*</span><span class="n">win</span><span class="p">){</span>
+        <span class="kt">char</span> <span class="o">*</span><span class="n">line</span> <span class="o">=</span> <span class="mh">0x0000000000607648</span><span class="p">;</span>
+        <span class="kt">char</span> <span class="n">key</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="sc">'d'</span><span class="p">,</span><span class="sc">'f'</span><span class="p">,</span><span class="sc">'j'</span><span class="p">,</span><span class="sc">'k'</span><span class="p">};</span>
+
+        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'o'</span> <span class="o">&amp;&amp;</span> <span class="o">++</span><span class="n">count</span> <span class="o">&gt;=</span> <span class="mi">20</span><span class="p">){</span>
+                                <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+                                <span class="k">return</span> <span class="n">key</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+                <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="n">origin_wgetch</span> <span class="n">_wgetch</span> <span class="o">=</span> <span class="p">(</span><span class="n">origin_wgetch</span><span class="p">)</span><span class="n">dlsym</span><span class="p">(</span><span class="n">RTLD_NEXT</span><span class="p">,</span> <span class="s">"wgetch"</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">_wgetch</span><span class="p">(</span><span class="n">win</span><span class="p">);</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+
+        </section>
+
+        <footer class="post-footer">
+
+            <!-- Everything inside the #author tags pulls data from the author -->
+            <!-- #author-->
+            
+                
+                    
+                        <figure class="author-image">
+                            <a class="img" href="/author/smlee" style="background-image: url(/assets/images/groot.jpg)"><span class="hidden">smlee's Picture</span></a>
+                        </figure>
+                    
+
+                    <section class="author">
+                        <h4><a href="/author/smlee">smlee</a></h4>
+
+                        
+                            <p> Computer Security, Programming, Life...</p>
+                        
+                        <div class="author-meta">
+                            <span class="author-location icon-location"> Repubilc of Korea</span>
+                            <span class="author-link icon-link"><a href=""> sm1ee.github.io/</a></span>
+                        </div>
+                    </section>
+
+                    <!-- /author  -->
+
+                    <section class="share">
+                        <h4>Share this post</h4>
+                        <a class="icon-twitter" href="http://twitter.com/share?text=[Samsung CTF 2018 Quals] - dingJMax&amp;url=https://sm1ee.github.io/Samsung-CTF-2018-Quals-dingJMax"
+                            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                            <span class="hidden">Twitter</span>
+                        </a>
+                        <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://sm1ee.github.io/Samsung-CTF-2018-Quals-dingJMax"
+                            onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                            <span class="hidden">Facebook</span>
+                        </a>
+                        <a class="icon-google-plus" href="https://plus.google.com/share?url=https://sm1ee.github.io/Samsung-CTF-2018-Quals-dingJMax"
+                           onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                            <span class="hidden">Google+</span>
+                        </a>
+                    </section>
+                
+            
+
+            <!-- Add Disqus Comments -->
+
+            
+                <div id="disqus_thread"></div>
+<script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'sm1ee'; // required: replace example with your forum shortname
+        var disqus_identifier = '/Samsung-CTF-2018-Quals-dingJMax';
+        var disqus_url = 'https://sm1ee.github.io//Samsung-CTF-2018-Quals-dingJMax';
+
+            /* * * DON'T EDIT BELOW THIS LINE * * */
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+    </div>
+
+
+            
+
+        </footer>
+
+    </article>
+
+</main>
+
+<aside class="read-next">
+
+    <!-- [[! next_post ]] -->
+    
+    <!-- [[! /next_post ]] -->
+    <!-- [[! prev_post ]] -->
+    
+        <a class="read-next-story prev " style="background-image: url(/assets/images/sctf2018/sctf2018.png)" href="/Samsung-CTF-2018-Quals-HideInSSL">
+            <section class="post">
+                <h2>[Samsung CTF 2018 Quals] - HideInSSL</h2>
+                <p>sslpacket.pcap //After “Export Specified Packets” 패킷을 분석해보면 아래와 같이 192.168.0.107, 192.168.0.128의 SSL handshake가 제대로 이루어지지...</p>
+            </section>
+        </a>
+    
+    <!-- [[! /prev_post ]] -->
+</aside>
+
+<!-- /post -->
+
+
+        <!-- The tiny footer at the very bottom -->
+        <footer class="site-footer clearfix">
+          <section class="copyright"><a href="/">smlee</a> &copy; 2018</section>
+          <section class="poweredby">Proudly published with <a href="https://jekyllrb.com/">Jekyll</a> using <a href="https://github.com/jekyller/jasper">Jasper</a></section>
+        </footer>
+    </div>
+    <!-- highlight.js -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <!-- jQuery needs to come before `` so that jQuery can be used in code injection -->
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+    <!-- Ghost outputs important scripts and data with this tag -->
+    <!--  -->
+    <!-- Add Google Analytics  -->
+        <!-- Google Analytics Tracking code -->
+     <script>
+	    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	    ga('create', 'UA-69281367-1', 'auto');
+	    ga('send', 'pageview');
+
+     </script>
+    <!-- Fitvids makes video embeds responsive and awesome -->
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+    <!-- The main JavaScript file for Casper -->
+    <script type="text/javascript" src="/assets/js/index.js"></script>
+
+</body>
+</html>

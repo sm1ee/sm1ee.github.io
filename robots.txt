@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: http://sm1ee.github.io/sitemap.xml

