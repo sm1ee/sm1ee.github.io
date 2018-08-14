@@ -2,7 +2,7 @@
 layout: page
 title: About
 navigation: true
-cover: 'assets/images/cover4.jpg'
+cover: 'assets/images/cover/cover3.jpg'
 logo: 'assets/images/smlee.png'
 current: about
 author: smlee
