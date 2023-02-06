@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 
 Sitemap: http://sm1ee.github.io/sitemap.xml
+
+#DaumWebMasterTool:c2029ce681a3310ecf8492ed20a5f541362b3af06a4885e7eb0a5a48199121ba:YjZ1lG5YV2w6Anpvw+x8Zw==
